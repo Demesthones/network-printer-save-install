@@ -1,0 +1,87 @@
+<HTA:APPLICATION 
+ID="objNoTitleBar" 
+APPLICATIONNAME="Install Printers" 
+SCROLL="no" 
+SINGLEINSTANCE="yes" 
+CAPTION="yes" > 
+<head>
+<title>Install Printers</title>
+<SCRIPT Language="VBScript">
+	'Tanner Cornejo / Chris Mathews
+	'4/2/2015
+	'For use by Health Delivery Inc.
+	
+    Sub Window_Onload
+				
+        window.resizeTo 255,410
+        strComputer = "."
+        Set WshNetwork = CreateObject("WScript.Network") 
+        Set objWMIService = GetObject("winmgmts:{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2") 
+		ForReading = 1
+		LoadFile_CreateStrings
+	End Sub
+	
+	Sub LoadFile_CreateStrings
+	
+		'Point to where the printer list is stored from autoSavePrinters.vbs
+		Const userMappedDrive = "S:\"
+	
+		Set fso = CreateObject("Scripting.FileSystemObject")
+		filein = userMappedDrive & "All Network Printers.txt"
+		If fso.FileExists(filein) Then
+			On Error Resume Next
+			arrLines = Split(fso.OpenTextFile(filein).ReadAll(), vbCrlf)
+			intUpper = Ubound(arrLines)
+			If Err = 0 Then
+				For i = 0 to Ubound(arrLines)
+					If (arrLines(i) = "") = 0 Then
+						Set objOption = Document.createElement("OPTION")
+						objOption.Text = arrLines(i)
+						objOption.Value = arrLines(i)
+						AvailablePrinters.Add(objOption)
+					End If
+				Next
+			Else
+				x=msgbox("Empty file: " & userMappedDrive & "All Network Printers.txt",0,"Error")
+			End If
+		Else
+			x=msgbox("File Not Found: " & userMappedDrive & "All Network Printers.txt",0,"Error 1")
+		End If
+    End Sub
+	
+    Sub Install
+		On Error Resume Next
+		Set WshNetwork = CreateObject("WScript.Network") 
+		strComputer = "."
+        Set objWMIService = GetObject("winmgmts:{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2") 
+        For Each objOption in AvailablePrinters.Options
+			If objOption.Selected Then
+				WshNetwork.AddWindowsPrinterConnection objOption.Value
+			End If
+		Next
+    End Sub
+
+    Sub CloseWindow 
+	self.close
+    End Sub 
+
+
+</SCRIPT>
+</head>
+<body bgcolor="#E6E6FA"> 
+<table border="0" align="center">
+<tr><td align="center">
+<!-- <img src= ""> -->
+</td></tr>
+<tr><td>
+Select Printers To Install:
+<select size="8" name="AvailablePrinters" multiple>
+</select>
+(Hold Ctrl and Click or Click and Drag for multiple):
+<p></td></tr>
+<tr><td>
+<input type="button" value="Install " onClick="Install">
+<input type="button" value="Exit " onClick="CloseWindow">
+</td></tr>
+</table>
+</body>
